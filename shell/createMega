@@ -15,7 +15,7 @@ pass=$(</home/max/password)
 #generate password for email
 passwordforemail=`date +%s | sha256sum | base64 | head -c 100 ; echo`
 
-#create user in email database
+#create email address with database. See https://www.linode.com/docs/email/postfix/email-with-postfix-dovecot-and-mysql
 mysql --user=root --password=$pass -e "USE mailserver; INSERT INTO virtual_users (domain_id, password , email) VALUES ('1', ENCRYPT('$passwordforemail',CONCAT('\$6\$', SUBSTRING(SHA(RAND()), -16))), '$num@createmega.xyz');"
 
 #email directory
