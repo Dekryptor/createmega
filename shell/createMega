@@ -1,0 +1,63 @@
+#!/bin/bash
+#lb
+
+if [ "$2" != "" ]; then
+        password=$1;
+        num=$2
+else
+        echo "ERROR add password and username";
+        exit
+fi
+
+#get mysql password
+pass=$(</home/max/password)
+
+#generate password for email
+passwordforemail=`date +%s | sha256sum | base64 | head -c 100 ; echo`
+
+#create user in email database
+mysql --user=root --password=$pass -e "USE mailserver; INSERT INTO virtual_users (domain_id, password , email) VALUES ('1', ENCRYPT('$passwordforemail',CONCAT('\$6\$', SUBSTRING(SHA(RAND()), -16))), '$num@createmega.xyz');"
+
+#email directory
+dir=/var/mail/vhosts/createmega.xyz/$num/new/
+
+#remove all files in email directory
+sudo rm -rf $dir*
+
+#send request email
+reg=$(megareg --register --email $num@createmega.xyz --name "New Mega" --password $password)
+
+#find line with code on
+code1=`echo "${reg}" | sed -n 3p`
+
+#check if email containing code is there
+X=1
+function checkforcode {
+        sleep 10
+        if (("$X" < "20")); then
+                for i in $dir*
+                do
+						#echo "$i"
+						#get line number which contains https://mega.nz/#confirm
+						lineN=`awk '/https:\/\/mega\.nz\/\#confirm/{ print NR; exit }' $i`
+
+						code2=`sudo sh -c "sed '$lineN!d' $i"`
+						echo $code2
+						#add .co to domain
+						code2=${code2/mega.nz/mega.co.nz}
+						if [[ $code2 != *"mega"* ]]
+						then
+										#echo "attempt" $X
+										X=$(( $X + 1 ))
+										checkforcode
+						fi
+                done
+        else
+                echo "FAILED"
+                exit
+        fi
+}
+checkforcode
+
+#run verifying code
+echo `${code1/@LINK@/$code2}`
