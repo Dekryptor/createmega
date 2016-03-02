@@ -1,5 +1,5 @@
 <?php
-$dom = "http://createmega.xyz/";
+$dom = "https://createmega.xyz/";
 if(substr($_SERVER['HTTP_REFERER'],0,strlen($dom)) != $dom){
 	 die("1");
 }
