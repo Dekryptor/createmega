@@ -2,31 +2,19 @@
 
 #generate random user
 function genUser {
-	user=$[ 1 + $[ RANDOM % 99999999 ]]
-	
-	NAMES="$(< /home/max/newMEGACount)" #names from names.txt file
-	for i in $NAMES; do
-		if [ "$user" -eq "$i" ]
-		then
-			genUser
-		fi
-	done
+        user=$[ 1 + $[ RANDOM % 99999999 ]]
+        
+        NAMES="$(< /home/max/newMEGACount)" #names from names.txt file
+        for i in $NAMES; do
+                if [ "$user" -eq "$i" ]
+                then
+                        genUser
+                fi
+        done
 }
 
 #generate random password
 password=`date +%s | sha256sum | base64 | head -c 20 ; echo`
-
-LOCKFILE=/tmp/lock.txt
-if [ -e ${LOCKFILE} ] && kill -0 `cat ${LOCKFILE}`; then
-    echo "process running"
-    sleep 5
-    /home/max/createForPHP
-    exit
-fi
-
-# make sure the lockfile is removed when we exit and then claim it
-trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
-echo $$ > ${LOCKFILE}
 
 #run function
 genUser
@@ -36,7 +24,5 @@ sudo /home/max/createMega $password $user
 
 #store user
 echo -e "$user\n" >> /home/max/newMEGACount
-
-rm -f ${LOCKFILE}
 
 echo "----->$user@createmega.xyz:$password"
